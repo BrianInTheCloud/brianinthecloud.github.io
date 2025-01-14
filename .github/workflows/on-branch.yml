@@ -16,7 +16,7 @@ jobs:
 
     - name: Dump GitHub context
       run: |
-        cp source __branch_${{ github.ref_name }}
+        cp -r source __branch_${{ github.ref_name }}
         cd __branch_${{ github.ref_name }}
         git init -b main
         git add .

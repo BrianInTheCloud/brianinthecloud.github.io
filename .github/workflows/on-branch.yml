@@ -1,7 +1,7 @@
 on:
   create:
-    branches:
-      - main
+    types: [branch]
+    branches: [main]
 
 jobs:
   create-branch:

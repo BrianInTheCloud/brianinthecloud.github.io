@@ -7,7 +7,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+
+    - name: Check out everything from main
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        path: source
+
+    - name: Dump GitHub context
+      run: |
+        cp source __branch_${{ github.ref_name }}
+        cd __branch_${{ github.ref_name }}
+        git init -b main
+        git add .
+        git commit -m "Branched off ${{ github.event.repository.name }}"
+        git push

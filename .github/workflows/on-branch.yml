@@ -17,7 +17,9 @@ jobs:
     - name: Dump GitHub context
       run: |
         cp -r source __branch_${{ github.ref_name }}
+        rm -r __branch_${{ github.ref_name }}/.git
         cd __branch_${{ github.ref_name }}
+        git config user.username ${{ github.repository_owner }}
         git init -b main
         git add .
         git commit -m "Branched off ${{ github.event.repository.name }}"

@@ -35,15 +35,13 @@ jobs:
       run: |
         git clone --bare --single-branch https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git config user.username ${{ github.repository_owner }}
-        git config user.password ${{ github.token }}
-        git push --mirror https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
 
     - name: Clean Up on Failure
       if: ${{ failure() }}
       run: |
         cd ${{ github.event.repository.name }}.git
-        gh repo delete ${{ steps.new-repo.outputs.repo_name }} --yes  # delete the new repo
-        git push origin -d ${{ github.ref_name }}                     # delete the new branch
+        gh repo delete ${{ steps.new-repo.outputs.repo_name }} --yes
+        git push https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.event.repository.name }} -d ${{ github.ref_name }}
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

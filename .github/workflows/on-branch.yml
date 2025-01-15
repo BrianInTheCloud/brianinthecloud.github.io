@@ -36,6 +36,8 @@ jobs:
         git config user.username ${{ github.repository_owner }}
         git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git push --mirror https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git remote rm origin
+        git remote add origin https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git push origin --mirror 
       env:
         GITHUB_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

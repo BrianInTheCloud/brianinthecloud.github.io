@@ -18,7 +18,7 @@ jobs:
       run: |
         gh repo create __branch_${{ github.ref_name }} --public
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
 
     - name: Copy Site Into New Repo
       if: false

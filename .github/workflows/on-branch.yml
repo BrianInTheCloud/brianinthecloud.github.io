@@ -33,11 +33,9 @@ jobs:
 
     - name: Copy Site Into New Repo
       run: |
-        git config user.username ${{ github.repository_owner }}
-        git config user.password ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
-        git clone --bare https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git push --mirror https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
 
     - name: Clean Up on Failure
       if: ${{ failure() }}

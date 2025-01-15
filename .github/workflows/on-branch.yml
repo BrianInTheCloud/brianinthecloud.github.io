@@ -35,7 +35,7 @@ jobs:
       run: |
         git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git push --mirror https://${{ github.repository_owner }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
 
     - name: Clean Up on Failure
       if: ${{ failure() }}

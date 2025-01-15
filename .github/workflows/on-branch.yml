@@ -25,6 +25,7 @@ jobs:
         new_repo_name="__branch_$sanitized_branch"
         echo "repo_name=$new_repo_name" >> $GITHUB_OUTPUT
         gh repo create $new_repo_name --public
+        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch.yml"
         gh secret --repo ${{ github.repository_owner }}/$new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
         gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_REPO --body "${{ github.event.repository.name }}"
         gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_BRANCH --body "${{ github.ref_name }}"

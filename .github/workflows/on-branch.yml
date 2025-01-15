@@ -14,7 +14,14 @@ jobs:
     #     fetch-depth: 0
     #     path: source
 
+    - name: Create New Repo for Branch
+      run: |
+        gh repo create __branch_${{ github.ref_name }} --public
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Copy Site Into New Repo
+      if: false
       run: |
         git config user.username ${{ github.repository_owner }}
         git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}

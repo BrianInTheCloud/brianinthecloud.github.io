@@ -31,11 +31,13 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
 
-    - name: Copy Site Into New Repo
+    - name: Copy HEAD of Site Into New Repo
       run: |
-        git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        git clone --bare --single-branch https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git config user.username ${{ github.repository_owner }}
+        git config user.password ${{ github.token }}
+        git push --mirror https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
 
     - name: Clean Up on Failure
       if: ${{ failure() }}

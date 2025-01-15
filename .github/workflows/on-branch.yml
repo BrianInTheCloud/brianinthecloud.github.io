@@ -14,9 +14,12 @@ jobs:
     #     fetch-depth: 0
     #     path: source
 
-    - name: Dump GitHub context
+    - name: Copy Site Into New Repo
       run: |
         git config user.username ${{ github.repository_owner }}
         git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
+        gh repo create __branch_${{ github.ref_name }} --public
         git push --mirror https://github.com/${{ github.repository_owner }}/__branch_${{ github.ref_name }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

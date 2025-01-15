@@ -23,8 +23,8 @@ jobs:
         sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
         new_repo_name="__branch_$sanitized_branch"
         gh repo create $new_repo_name --public
-        gh secret --repo $new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
-        gh variable --repo $new_repo_name set SOURCE_REPO --body "${{ github.event.repository.name }}"
+        gh secret --repo ${{ github.repository_owner }}/$new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
+        gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_REPO --body "${{ github.event.repository.name }}"
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
 

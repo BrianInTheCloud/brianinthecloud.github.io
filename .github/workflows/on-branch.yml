@@ -16,6 +16,7 @@ jobs:
 
     - name: Dump GitHub context
       run: |
+        git config user.username ${{ github.repository_owner }}
         git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
         git push --mirror https://github.com/${{ github.repository_owner }}/__branch_${{ github.ref_name }}

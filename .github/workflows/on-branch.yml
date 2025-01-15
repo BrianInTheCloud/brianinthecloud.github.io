@@ -33,8 +33,13 @@ jobs:
 
     - name: Copy Site Into New Repo
       run: |
+        echo "git config user.username ${{ github.repository_owner }}"
         git config user.username ${{ github.repository_owner }}
+        echo "git config user.password ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
         git config user.password ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
+        echo "git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}"
         git clone --bare https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        echo "cd ${{ github.event.repository.name }}.git"
         cd ${{ github.event.repository.name }}.git
+        echo "git push --mirror https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}"
         git push --mirror https://github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}

@@ -12,12 +12,6 @@ jobs:
 
     steps:
 
-    # - name: Check out everything from main
-    #   uses: actions/checkout@v4
-    #   with:
-    #     fetch-depth: 0
-    #     path: source
-
     - name: Create New Repo for Branch
       id: new-repo
       run: |

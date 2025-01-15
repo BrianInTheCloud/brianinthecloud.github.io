@@ -42,6 +42,7 @@ jobs:
     - name: Clean Up on Failure
       if: ${{ failure() }}
       run: |
+        cd ${{ github.event.repository.name }}.git
         gh repo delete ${{ steps.new-repo.outputs.repo_name }} --yes  # delete the new repo
         git push origin -d ${{ github.ref_name }}                     # delete the new branch
       env:

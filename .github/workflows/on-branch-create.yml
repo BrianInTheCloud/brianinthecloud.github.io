@@ -39,7 +39,8 @@ jobs:
         gh api 'repos/${{ github.repository_owner }}/$new_repo_name/pages' -f "source[branch]=main" -f "source[path]=/"
 
         # Enable actions
-        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch.yml"
+        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch-create.yml"
+        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch-delete.yml"
 
         # Propagate secrets and actions
         gh secret --repo ${{ github.repository_owner }}/$new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"

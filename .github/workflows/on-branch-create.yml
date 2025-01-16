@@ -2,6 +2,9 @@ defaults:
   run:
     shell: bash -v {0}
 
+env:
+  GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
+
 on:
   create # does not support filtering by type (branch), must do later
 
@@ -30,9 +33,6 @@ jobs:
       run: |
         gh repo create ${{ steps.repo.outputs.name }} --public
         if [ $? -eq 0 ]; then echo "created=1" >> $GITHUB_OUTPUT; fi
-
-      env:
-        GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
 
     - name: Copy HEAD of Site Into New Repo
       run: |
@@ -67,6 +67,3 @@ jobs:
         # Delete new branch in source repo
         cd ${{ github.event.repository.name }}.git
         git push https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.event.repository.name }} -d ${{ github.ref_name }}
-
-      env:
-        GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

@@ -18,14 +18,8 @@ jobs:
     - name: Calculate Name of New Repo
       id: repo
       run: |
-
-        # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
         sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
-
-        # Add prefix to avoid collisions and sort last alphabetically
         new_repo_name="__branch_$sanitized_branch"
-
-        # Add to step output; access as steps.repo.outputs.name
         echo "name=$new_repo_name" >> $GITHUB_OUTPUT
 
     - name: Create New Repo for Branch
@@ -47,13 +41,13 @@ jobs:
         gh api 'repos/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}/pages' -f "source[branch]=main" -f "source[path]=/"
 
         # Enable actions
-        gh workflow --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} enable "on-branch-create.yml"
-        gh workflow --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} enable "on-branch-delete.yml"
+        # gh workflow --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} enable "on-branch-create.yml"
+        # gh workflow --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} enable "on-branch-delete.yml"
 
         # Propagate secrets and actions
-        gh secret --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
-        gh variable --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set SOURCE_REPO --body "${{ github.event.repository.name }}"
-        gh variable --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set SOURCE_BRANCH --body "${{ github.ref_name }}"
+        # gh secret --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
+        # gh variable --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set SOURCE_REPO --body "${{ github.event.repository.name }}"
+        # gh variable --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set SOURCE_BRANCH --body "${{ github.ref_name }}"
 
     - name: Clean Up on Failure
       if: ${{ failure() }}

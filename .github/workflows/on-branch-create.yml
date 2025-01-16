@@ -1,0 +1,65 @@
+defaults:
+  run:
+    shell: bash -v {0}
+
+on:
+  create # does not support filtering by type (branch), must do later
+
+jobs:
+  create-branch:
+    if: github.ref_type == 'branch' # create can be branches or tags; we want only branches
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Calculate Name of New Repo
+      id: repo
+      run: |
+        # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
+        sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+
+        # Add prefix to avoid collisions and sort last alphabetically
+        new_repo_name="__branch_$sanitized_branch"
+
+        # Add to step output; access as steps.repo.outputs.name
+        echo "name=$new_repo_name" >> $GITHUB_OUTPUT
+
+    - name: Create New Repo for Branch
+      run: |
+        new_repo_name=${{ steps.repo.outputs.name }}
+
+        # Create new repo
+        gh repo create $new_repo_name --public
+
+        # Enable pages site
+        gh api 'repos/${{ github.repository_owner }}/$new_repo_name/pages' -f "source[branch]=main" -f "source[path]=/"
+
+        # Enable actions
+        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch.yml"
+
+        # Propagate secrets and actions
+        gh secret --repo ${{ github.repository_owner }}/$new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
+        gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_REPO --body "${{ github.event.repository.name }}"
+        gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_BRANCH --body "${{ github.ref_name }}"
+      env:
+        GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
+
+    - name: Copy HEAD of Site Into New Repo
+      run: |
+        git clone --bare --single-branch https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        cd ${{ github.event.repository.name }}.git
+        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+
+    - name: Clean Up on Failure
+      if: ${{ failure() }}
+      run: |
+        # Must be in a git directory for some of this to work
+        cd ${{ github.event.repository.name }}.git
+
+        # Delete new repo (TODO: only delete if create succeeded (was not already there))
+        gh repo delete ${{ steps.repo.outputs.name }} --yes
+
+        # Delete new branch in source repo
+        git push https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.event.repository.name }} -d ${{ github.ref_name }}
+      env:
+        GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

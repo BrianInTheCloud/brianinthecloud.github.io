@@ -16,7 +16,7 @@ jobs:
       id: repo
       run: |
 
-        echo "$GITHUB_CONTEXT"
+        echo "${{ toJson(github) }}"
 
         # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
         sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")

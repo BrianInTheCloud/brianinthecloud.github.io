@@ -22,13 +22,13 @@ jobs:
         echo "${{ toJson(github) }}"
 
         # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
-        sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+        sanitized_branch=$(echo '${{ github.event.ref }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
 
         # Add prefix to avoid collisions and sort last alphabetically
-        new_repo_name="__branch_$sanitized_branch"
+        target_repo_name="__branch_$sanitized_branch"
 
         # Add to step output; access as steps.repo.outputs.name
-        echo "name=$new_repo_name" >> $GITHUB_OUTPUT
+        echo "name=$target_repo_name" >> $GITHUB_OUTPUT
 
     - name: Delete Target Repo Corresponding to Branch
       run: |

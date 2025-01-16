@@ -6,6 +6,7 @@ defaults:
 
 env:
   GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
+  DEBUG: true
 
 on:
   push:
@@ -13,10 +14,36 @@ on:
       - main
 
 jobs:
-  job1:
+  publish-changes:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Dump Context
-        run: |
-          echo "${{ toJson(github) }}"
+
+    - name: Dump Context
+      if: ${{ env.DEBUG }}
+      run: |
+        echo "${{ toJson(github) }}"
+
+    - name: Calculate Name of Target Repo
+      id: repo
+      run: |
+        sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+        target_repo_name="__branch_$sanitized_branch"
+        echo "name=$target_repo_name" >> $GITHUB_OUTPUT
+
+    - uses: actions/checkout@v4
+      with:
+        path: from
+
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
+        path: to
+
+    - name: Publish Changes to Branch Repo
+      run: |
+        rsync -r from/* to
+        cd to
+        git add .
+        git commit -m "${{ github.event.head_commit.message }}"
+        git push http://${{ env.GH_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}

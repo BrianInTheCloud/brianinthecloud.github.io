@@ -6,6 +6,7 @@ defaults:
 
 env:
   GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
+  DEBUG: false
 
 on:
   delete # does not support filtering by type (branch), must do later
@@ -16,6 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: Dump Context
+      if: ${{ env.DEBUG }}
+      run: |
+        echo "${{ toJson(github) }}"
 
     - name: Calculate Name of Target Repo
       id: repo

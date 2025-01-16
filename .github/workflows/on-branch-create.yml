@@ -6,6 +6,7 @@ defaults:
 
 env:
   GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
+  DEBUG: false
 
 on:
   create # does not support filtering by type (branch), must do later
@@ -16,6 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: Dump Context
+      if: ${{ env.DEBUG }}
+      run: |
+        echo "${{ toJson(github) }}"
 
     - name: Calculate Name of New Repo
       id: repo
@@ -34,7 +40,7 @@ jobs:
       run: |
         git clone --bare --single-branch https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
+        git push --mirror https://${{ env.GH_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
 
     - name: Configure New Repo
       run: |

@@ -1,0 +1,31 @@
+defaults:
+  run:
+    shell: bash -v {0}
+
+on:
+  delete # does not support filtering by type (branch), must do later
+
+jobs:
+  delete-branch:
+    if: github.ref_type == 'branch' # create can be branches or tags; we want only branches
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Calculate Name of Target Repo
+      id: repo
+      run: |
+        # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
+        sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+
+        # Add prefix to avoid collisions and sort last alphabetically
+        new_repo_name="__branch_$sanitized_branch"
+
+        # Add to step output; access as steps.repo.outputs.name
+        echo "name=$new_repo_name" >> $GITHUB_OUTPUT
+
+    - name: Delete Target Repo Corresponding to Branch
+      run: |
+        gh repo delete ${{ steps.repo.outputs.name }} --yes
+      env:
+        GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

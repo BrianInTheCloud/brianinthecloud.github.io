@@ -28,24 +28,8 @@ jobs:
     - name: Create New Repo for Branch
       id: create
       run: |
-
-        new_repo_name=${{ steps.repo.outputs.name }}
-
-        # Create new repo
-        gh repo create $new_repo_name --public
+        gh repo create ${{ steps.repo.outputs.name }} --public
         if [ $? -eq 0 ]; then echo "created=1" >> $GITHUB_OUTPUT; fi
-
-        # Enable pages site
-        gh api 'repos/${{ github.repository_owner }}/$new_repo_name/pages' -f "source[branch]=main" -f "source[path]=/"
-
-        # Enable actions
-        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch-create.yml"
-        gh workflow --repo ${{ github.repository_owner }}/$new_repo_name enable "on-branch-delete.yml"
-
-        # Propagate secrets and actions
-        gh secret --repo ${{ github.repository_owner }}/$new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
-        gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_REPO --body "${{ github.event.repository.name }}"
-        gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_BRANCH --body "${{ github.ref_name }}"
 
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
@@ -55,6 +39,21 @@ jobs:
         git clone --bare --single-branch https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
         git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
+
+    - name: Configure New Repo
+      run: |
+
+        # Enable pages site
+        gh api 'repos/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}/pages' -f "source[branch]=main" -f "source[path]=/"
+
+        # Enable actions
+        gh workflow --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} enable "on-branch-create.yml"
+        gh workflow --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} enable "on-branch-delete.yml"
+
+        # Propagate secrets and actions
+        gh secret --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
+        gh variable --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set SOURCE_REPO --body "${{ github.event.repository.name }}"
+        gh variable --repo ${{ github.repository_owner }}/${{ steps.repo.outputs.name }} set SOURCE_BRANCH --body "${{ github.ref_name }}"
 
     - name: Clean Up on Failure
       if: ${{ failure() }}

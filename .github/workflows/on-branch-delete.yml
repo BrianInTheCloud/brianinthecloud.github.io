@@ -1,3 +1,5 @@
+name: On Branch Delete
+
 defaults:
   run:
     shell: bash -v {0}

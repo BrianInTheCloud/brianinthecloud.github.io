@@ -1,3 +1,5 @@
+name: On Branch Create
+
 defaults:
   run:
     shell: bash -v {0}

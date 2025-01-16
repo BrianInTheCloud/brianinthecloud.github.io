@@ -1,3 +1,5 @@
+name: On Commit
+
 defaults:
   run:
     shell: bash -v {0}

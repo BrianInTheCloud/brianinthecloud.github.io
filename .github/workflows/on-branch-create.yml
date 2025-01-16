@@ -15,6 +15,7 @@ jobs:
     - name: Calculate Name of New Repo
       id: repo
       run: |
+
         # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
         sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
 
@@ -25,11 +26,14 @@ jobs:
         echo "name=$new_repo_name" >> $GITHUB_OUTPUT
 
     - name: Create New Repo for Branch
+      id: create
       run: |
+
         new_repo_name=${{ steps.repo.outputs.name }}
 
         # Create new repo
         gh repo create $new_repo_name --public
+        if [ $? -eq 0 ]; then echo "created=1" >> $GITHUB_OUTPUT; fi
 
         # Enable pages site
         gh api 'repos/${{ github.repository_owner }}/$new_repo_name/pages' -f "source[branch]=main" -f "source[path]=/"
@@ -41,6 +45,7 @@ jobs:
         gh secret --repo ${{ github.repository_owner }}/$new_repo_name set CROSS_REPO_GITHUB_TOKEN --body "${{ secrets.CROSS_REPO_GITHUB_TOKEN }}"
         gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_REPO --body "${{ github.event.repository.name }}"
         gh variable --repo ${{ github.repository_owner }}/$new_repo_name set SOURCE_BRANCH --body "${{ github.ref_name }}"
+
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
 
@@ -48,18 +53,20 @@ jobs:
       run: |
         git clone --bare --single-branch https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}
         cd ${{ github.event.repository.name }}.git
-        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.new-repo.outputs.repo_name }}
+        git push --mirror https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
 
     - name: Clean Up on Failure
       if: ${{ failure() }}
       run: |
-        # Must be in a git directory for some of this to work
-        cd ${{ github.event.repository.name }}.git
 
-        # Delete new repo (TODO: only delete if create succeeded (was not already there))
-        gh repo delete ${{ steps.repo.outputs.name }} --yes
+        # Delete new repo only if create succeeded
+        if [ ${{ steps.create.outputs.created }} -eq 1 ]; then
+          gh repo delete ${{ steps.repo.outputs.name }} --yes
+        fi
 
         # Delete new branch in source repo
+        cd ${{ github.event.repository.name }}.git
         git push https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.event.repository.name }} -d ${{ github.ref_name }}
+
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

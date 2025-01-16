@@ -15,6 +15,7 @@ jobs:
     - name: Calculate Name of Target Repo
       id: repo
       run: |
+
         echo "$GITHUB_CONTEXT"
 
         # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
@@ -28,6 +29,8 @@ jobs:
 
     - name: Delete Target Repo Corresponding to Branch
       run: |
+
         gh repo delete ${{ steps.repo.outputs.name }} --yes
+
       env:
         GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}

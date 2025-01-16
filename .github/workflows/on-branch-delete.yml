@@ -15,6 +15,8 @@ jobs:
     - name: Calculate Name of Target Repo
       id: repo
       run: |
+        echo "$GITHUB_CONTEXT"
+
         # GitHub repos translate all chars except [a-zA-Z0-9._-] to '-', so we'll do the same
         sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
 

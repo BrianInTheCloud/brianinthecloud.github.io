@@ -32,22 +32,25 @@ jobs:
           # GitHub translates all chars except [a-zA-Z0-9._-] into '-' for repos, so we'll do that too
           sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
           target_repo_name="__branch_$sanitized_branch"
+          ::debug::Target repo name: $target_repo_name
           echo "name=$target_repo_name" >> $GITHUB_OUTPUT
 
           # It's possible to be here and the repo doesn't exist yet
           gh repo view ${{ github.repository_owner }}/$target_repo_name 2> /dev/null
           if [ $? -eq 0 ]; then
+            ::debug::Repo ${{ github.repository_owner }}/$target_repo_name exists
             echo "exists=1" >> $GITHUB_OUTPUT;
           else
+            ::debug::Repo ${{ github.repository_owner }}/$target_repo_name does not exist
             echo "exists=0" >> $GITHUB_OUTPUT;
           fi
 
-      - name: Look at Existing Branches
+      - name: Info about Existing Branches
         run: |
           branches=$(gh api repos/${{ github.repository }}/branches --jq '.[] | {name}.name')
-          echo $branches
           IFS=$'\n'
           for branch in branches; do
+            echo $branch
             sanitized_branch=$(echo '$branch' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
           done
 

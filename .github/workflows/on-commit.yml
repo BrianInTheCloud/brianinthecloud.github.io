@@ -67,4 +67,4 @@ jobs:
           git config user.name "${{ github.event.head_commit.author.name }}"
           git config user.email "${{ github.event.head_commit.author.email }}"
           git commit -m "${{ github.event.head_commit.message }}"
-          git push http://${{ github.event.head_commit.author.username }}:${{ env.GH_TOKEN }}@github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}
+          git push http://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}

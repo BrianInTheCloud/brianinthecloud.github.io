@@ -37,7 +37,7 @@ jobs:
           echo "name=$target_repo_name" >> $GITHUB_OUTPUT
 
           # It's possible to be here and the repo doesn't exist yet
-          gh repo view ${{ github.repository_owner }}/$target_repo_name 2> /dev/null
+          gh repo view ${{ github.repository_owner }}/$target_repo_name > /dev/null
           if [ $? -eq 0 ]; then
             echo "Repo ${{ github.repository_owner }}/$target_repo_name exists"
             echo "exists=1" >> $GITHUB_OUTPUT;
@@ -54,13 +54,16 @@ jobs:
     steps:
       - name: Publish Changes to Branch Repo
         run: |
-          git clone https://github.com/${{ github.repository }} --branch "${{ github.ref_name }}" --single-branch from
-          git clone https://github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }} --single-branch to
-          rsync -r from/* to
-          cd to
-          git add .
-          git config user.username "${{ github.event.head_commit.author.username }}"
-          git config user.name "${{ github.event.head_commit.author.name }}"
-          git config user.email "${{ github.event.head_commit.author.email }}"
-          git commit -m "${{ github.event.head_commit.message }}"
+          #git clone https://github.com/${{ github.repository }} --branch "${{ github.ref_name }}" --single-branch from
+          #git clone https://github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }} --single-branch to
+          #rsync -r from/* to
+          #cd to
+          #git add .
+          #git config user.username "${{ github.event.head_commit.author.username }}"
+          #git config user.name "${{ github.event.head_commit.author.name }}"
+          #git config user.email "${{ github.event.head_commit.author.email }}"
+          #git commit -m "${{ github.event.head_commit.message }}"
+          #git push http://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}
+          git clone https://github.com/${{ github.repository }} --branch "${{ github.ref_name }}" repo
+          cd repo
           git push http://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}

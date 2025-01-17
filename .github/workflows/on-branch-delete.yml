@@ -1,5 +1,8 @@
 name: On Branch Delete
 
+on:
+  delete # does not support filtering by type (branch), must do later
+
 defaults:
   run:
     shell: bash -v {0}
@@ -8,28 +11,51 @@ env:
   GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
   DEBUG: false
 
-on:
-  delete # does not support filtering by type (branch), must do later
-
 jobs:
-  delete-branch:
-    if: github.ref_type == 'branch' # create can be branches or tags; we want only branches
+
+  collect-info:
     runs-on: ubuntu-latest
+    if: github.ref_type == 'branch' # create can be branches or tags; we want only branches
+    outputs:
+      repo-name: ${{ steps.repo.outputs.name }}
+      repo-exists: ${{ steps.repo.outputs.exists }}
 
     steps:
+      - name: Dump Context
+        if: env.DEBUG
+        run: echo "${{ toJson(github) }}"
 
-    - name: Dump Context
-      if: ${{ env.DEBUG }}
-      run: |
-        echo "${{ toJson(github) }}"
+      - name: Info about Target Repo
+        id: repo
+        run: |
 
-    - name: Calculate Name of Target Repo
-      id: repo
-      run: |
-        sanitized_branch=$(echo '${{ github.event.ref }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
-        target_repo_name="__branch_$sanitized_branch"
-        echo "name=$target_repo_name" >> $GITHUB_OUTPUT
+          # GitHub translates all chars except [a-zA-Z0-9._-] into '-' for repos, so we'll do that too
+          sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+          target_repo_name="__branch_$sanitized_branch"
+          echo "name=$target_repo_name" >> $GITHUB_OUTPUT
 
-    - name: Delete Target Repo Corresponding to Branch
-      run: |
-        gh repo delete ${{ steps.repo.outputs.name }} --yes
+          # It's possible to be here and the repo doesn't exist yet
+          gh repo view ${{ github.repository_owner }}/$target_repo_name 2> /dev/null
+          if [ $? -eq 0 ]; then
+            echo "exists=1" >> $GITHUB_OUTPUT;
+          else
+            echo "exists=0" >> $GITHUB_OUTPUT;
+          fi
+
+      - name: Look at Existing Branches
+        run: |
+          branches=$(gh api repos/${{ github.repository_owner }}/${{ github.repository }}/branches --jq '.[] | {name}.name')
+          echo $branches
+          IFS=$'\n'
+          for branch in branches; do
+            sanitized_branch=$(echo '$branch' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+          done
+
+  delete-branch:
+    runs-on: ubuntu-latest
+    needs: collect-info
+
+    steps:
+      - name: Delete Target Repo Corresponding to Branch
+        if: needs.collect-info.outputs.repo-exists == 1
+        run: gh repo delete ${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }} --yes

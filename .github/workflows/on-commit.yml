@@ -1,5 +1,10 @@
 name: On Commit
 
+on:
+  push:
+    branches-ignore:
+      - main
+
 defaults:
   run:
     shell: bash -v {0}
@@ -8,42 +13,56 @@ env:
   GH_TOKEN: ${{ secrets.CROSS_REPO_GITHUB_TOKEN }}
   DEBUG: true
 
-on:
-  push:
-    branches-ignore:
-      - main
-
 jobs:
-  publish-changes:
+
+  collect-info:
     runs-on: ubuntu-latest
+    outputs:
+      repo-name: ${{ steps.repo.outputs.name }}
+      repo-exists: ${{ steps.repo.outputs.exists }}
 
     steps:
+      - name: Dump Context
+        if: env.DEBUG
+        run: |
+          echo "${{ toJson(github) }}"
 
-    - name: Dump Context
-      if: ${{ env.DEBUG }}
-      run: |
-        echo "${{ toJson(github) }}"
+      - name: Info about Target Repo
+        id: repo
+        run: |
 
-    - name: Calculate Name of Target Repo
-      id: repo
-      run: |
-        sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
-        target_repo_name="__branch_$sanitized_branch"
-        echo "name=$target_repo_name" >> $GITHUB_OUTPUT
+          # GitHub translates all chars except [a-zA-Z0-9._-] into '-' for repos, so we'll do that too
+          sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+          target_repo_name="__branch_$sanitized_branch"
+          echo "name=$target_repo_name" >> $GITHUB_OUTPUT
 
-    - uses: actions/checkout@v4
-      with:
-        path: from
+          # It's possible to be here and the repo doesn't exist yet
+          gh repo view ${{ github.repository_owner }}/$target_repo_name 2> /dev/null
+          if [ $? -eq 0 ]; then
+            echo "exists=1" >> $GITHUB_OUTPUT;
+          else
+            echo "exists=0" >> $GITHUB_OUTPUT;
+          fi
 
-    - uses: actions/checkout@v4
-      with:
-        repository: ${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
-        path: to
+  publish-changes:
+    runs-on: ubuntu-latest
+    needs: collect-info
+    if: needs.collect-info.outputs.repo-exists == 1
 
-    - name: Publish Changes to Branch Repo
-      run: |
-        rsync -r from/* to
-        cd to
-        git add .
-        git commit -m "${{ github.event.head_commit.message }}"
-        git push http://${{ env.GH_TOKEN }}@github.com/${{ github.repository_owner }}/${{ steps.repo.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: from
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}
+          path: to
+
+      - name: Publish Changes to Branch Repo
+        run: |
+          rsync -r from/* to
+          cd to
+          git add .
+          git commit -m "${{ github.event.head_commit.message }}"
+          git push http://${{ env.GH_TOKEN }}@github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}

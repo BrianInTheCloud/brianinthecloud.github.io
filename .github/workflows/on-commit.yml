@@ -24,8 +24,7 @@ jobs:
     steps:
       - name: Dump Context
         if: env.DEBUG
-        run: |
-          echo "${{ toJson(github) }}"
+        run: echo "${{ toJson(github) }}"
 
       - name: Info about Target Repo
         id: repo

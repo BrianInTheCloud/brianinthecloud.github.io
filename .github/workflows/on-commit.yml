@@ -52,17 +52,10 @@ jobs:
     if: needs.collect-info.outputs.repo-exists == 1
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          path: from
-
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }}
-          path: to
-
       - name: Publish Changes to Branch Repo
         run: |
+          git clone https://github.com/${{ github.repository }} --branch "${{ github.ref_name }}" --single-branch from
+          git clone https://github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }} --single-branch to
           rsync -r from/* to
           cd to
           git add .

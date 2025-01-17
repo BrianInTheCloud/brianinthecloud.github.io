@@ -30,7 +30,7 @@ jobs:
         run: |
 
           # GitHub translates all chars except [a-zA-Z0-9._-] into '-' for repos, so we'll do that too
-          sanitized_branch=$(echo '${{ github.ref_name }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
+          sanitized_branch=$(echo '${{ github.event.ref }}' | sed -e "s/[^a-zA-Z0-9._-]/-/g")
           target_repo_name="__branch_$sanitized_branch"
           echo "Target repo name -> $target_repo_name"
           echo "name=$target_repo_name" >> $GITHUB_OUTPUT

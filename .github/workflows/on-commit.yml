@@ -63,5 +63,9 @@ jobs:
           rsync -r from/* to
           cd to
           git add .
+          git config --get user.username
+          git config --get user.name
+          git config --get user.email
+          git config --get user.password
           git commit -m '${{ github.event.head_commit.message }}'
           git push

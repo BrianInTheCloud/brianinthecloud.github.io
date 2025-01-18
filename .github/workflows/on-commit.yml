@@ -26,7 +26,7 @@ jobs:
         if: env.DEBUG
         run: echo "${{ toJson(github) }}"
 
-      - name: Info about Target Repo
+      - name: Collect Info about Target Repo
         id: repo
         run: |
 
@@ -54,18 +54,14 @@ jobs:
     steps:
       - name: Publish Changes to Branch Repo
         run: |
-          git config --global user.username '${{ github.event.head_commit.author.username }}'
-          git config --global user.name '${{ github.event.head_commit.author.name }}'
-          git config --global user.email '${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com'
-          git config --global user.password '${{ secrets.CROSS_REPO_GITHUB_TOKEN }}'
           git clone https://github.com/${{ github.repository }} --branch "${{ github.ref_name }}" from
-          git clone https://github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }} to
+          git clone https://${{ secrets.CROSS_REPO_GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ needs.collect-info.outputs.repo-name }} to
           rsync -r from/* to
           cd to
+          git config user.username '${{ github.event.head_commit.author.username }}'
+          git config user.name '${{ github.event.head_commit.author.name }}'
+          git config user.email '${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com'
+          git config --list
           git add .
-          git config --get user.username
-          git config --get user.name
-          git config --get user.email
-          git config --get user.password
           git commit -m '${{ github.event.head_commit.message }}'
           git push
